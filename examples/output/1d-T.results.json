@@ -71,6 +71,24 @@
             "channel"
           ],
           "orderGroupBy": "effectiveness"
+        },
+        {
+          "name": "style:autocount()|xy:year(Release_Date)",
+          "path": "/autocount()|year(Release_Date)/style:autocount()|xy:year(Release_Date)",
+          "items": [
+            {
+              "name": "style:autocount()|xy:year(Release_Date)",
+              "path": "/autocount()|year(Release_Date)/style:autocount()|xy:year(Release_Date)/style:autocount()|xy:year(Release_Date)",
+              "items": [
+                "rect|color:count(*,q)|x:year(Release_Date,t)",
+                "rect|color:count(*,q)|y:year(Release_Date,t)"
+              ]
+            }
+          ],
+          "groupBy": [
+            "channel"
+          ],
+          "orderGroupBy": "effectiveness"
         }
       ],
       "groupBy": [
@@ -112,6 +130,24 @@
                 "point|x:count(*,q)|y:month(Release_Date,t)",
                 "tick|x:month(Release_Date,t)|y:count(*,q)",
                 "tick|x:count(*,q)|y:month(Release_Date,t)"
+              ]
+            }
+          ],
+          "groupBy": [
+            "channel"
+          ],
+          "orderGroupBy": "effectiveness"
+        },
+        {
+          "name": "style:autocount()|xy:month(Release_Date)",
+          "path": "/autocount()|month(Release_Date)/style:autocount()|xy:month(Release_Date)",
+          "items": [
+            {
+              "name": "style:autocount()|xy:month(Release_Date)",
+              "path": "/autocount()|month(Release_Date)/style:autocount()|xy:month(Release_Date)/style:autocount()|xy:month(Release_Date)",
+              "items": [
+                "rect|color:count(*,q)|x:month(Release_Date,t)",
+                "rect|color:count(*,q)|y:month(Release_Date,t)"
               ]
             }
           ],

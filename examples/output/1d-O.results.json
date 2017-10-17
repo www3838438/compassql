@@ -31,6 +31,24 @@
             "channel"
           ],
           "orderGroupBy": "effectiveness"
+        },
+        {
+          "name": "style:autocount()|xy:Cylinders",
+          "path": "/Cylinders|autocount()/style:autocount()|xy:Cylinders",
+          "items": [
+            {
+              "name": "style:autocount()|xy:Cylinders",
+              "path": "/Cylinders|autocount()/style:autocount()|xy:Cylinders/style:autocount()|xy:Cylinders",
+              "items": [
+                "rect|color:count(*,q)|y:Cylinders,o",
+                "rect|color:count(*,q)|x:Cylinders,o"
+              ]
+            }
+          ],
+          "groupBy": [
+            "channel"
+          ],
+          "orderGroupBy": "effectiveness"
         }
       ],
       "groupBy": [

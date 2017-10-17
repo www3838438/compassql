@@ -14,6 +14,7 @@
               "name": "xy:Origin",
               "path": "/Origin/xy:Origin/xy:Origin",
               "items": [
+                "rect|x:Origin,n",
                 "point|x:Origin,n"
               ]
             }

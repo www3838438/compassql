@@ -73,6 +73,24 @@
             "channel"
           ],
           "orderGroupBy": "effectiveness"
+        },
+        {
+          "name": "style:mean(Horsepower)|xy:Cylinders",
+          "path": "/Cylinders|mean(Horsepower)/style:mean(Horsepower)|xy:Cylinders",
+          "items": [
+            {
+              "name": "style:mean(Horsepower)|xy:Cylinders",
+              "path": "/Cylinders|mean(Horsepower)/style:mean(Horsepower)|xy:Cylinders/style:mean(Horsepower)|xy:Cylinders",
+              "items": [
+                "rect|color:mean(Horsepower,q)|y:Cylinders,o",
+                "rect|color:mean(Horsepower,q)|x:Cylinders,o"
+              ]
+            }
+          ],
+          "groupBy": [
+            "channel"
+          ],
+          "orderGroupBy": "effectiveness"
         }
       ],
       "groupBy": [
@@ -106,7 +124,9 @@
               "items": [
                 "point|size:count(*,q)|x:bin(Horsepower,q)|y:Cylinders,o",
                 "point|size:count(*,q)|x:Cylinders,o|y:bin(Horsepower,q)",
+                "rect|color:count(*,q)|x:bin(Horsepower,q)|y:Cylinders,o",
                 "point|color:count(*,q)|x:bin(Horsepower,q)|y:Cylinders,o",
+                "rect|color:count(*,q)|x:Cylinders,o|y:bin(Horsepower,q)",
                 "point|color:count(*,q)|x:Cylinders,o|y:bin(Horsepower,q)"
               ]
             }

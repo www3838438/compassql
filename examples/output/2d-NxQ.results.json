@@ -69,6 +69,24 @@
             "channel"
           ],
           "orderGroupBy": "effectiveness"
+        },
+        {
+          "name": "style:mean(Horsepower)|xy:Origin",
+          "path": "/Origin|mean(Horsepower)/style:mean(Horsepower)|xy:Origin",
+          "items": [
+            {
+              "name": "style:mean(Horsepower)|xy:Origin",
+              "path": "/Origin|mean(Horsepower)/style:mean(Horsepower)|xy:Origin/style:mean(Horsepower)|xy:Origin",
+              "items": [
+                "rect|color:mean(Horsepower,q)|y:Origin,n",
+                "rect|color:mean(Horsepower,q)|x:Origin,n"
+              ]
+            }
+          ],
+          "groupBy": [
+            "channel"
+          ],
+          "orderGroupBy": "effectiveness"
         }
       ],
       "groupBy": [
@@ -102,7 +120,9 @@
               "items": [
                 "point|size:count(*,q)|x:bin(Horsepower,q)|y:Origin,n",
                 "point|size:count(*,q)|x:Origin,n|y:bin(Horsepower,q)",
+                "rect|color:count(*,q)|x:bin(Horsepower,q)|y:Origin,n",
                 "point|color:count(*,q)|x:bin(Horsepower,q)|y:Origin,n",
+                "rect|color:count(*,q)|x:Origin,n|y:bin(Horsepower,q)",
                 "point|color:count(*,q)|x:Origin,n|y:bin(Horsepower,q)"
               ]
             }

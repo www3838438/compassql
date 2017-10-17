@@ -27,6 +27,24 @@
             "channel"
           ],
           "orderGroupBy": "effectiveness"
+        },
+        {
+          "name": "style:autocount()|xy:Origin",
+          "path": "/Origin|autocount()/style:autocount()|xy:Origin",
+          "items": [
+            {
+              "name": "style:autocount()|xy:Origin",
+              "path": "/Origin|autocount()/style:autocount()|xy:Origin/style:autocount()|xy:Origin",
+              "items": [
+                "rect|color:count(*,q)|y:Origin,n",
+                "rect|color:count(*,q)|x:Origin,n"
+              ]
+            }
+          ],
+          "groupBy": [
+            "channel"
+          ],
+          "orderGroupBy": "effectiveness"
         }
       ],
       "groupBy": [

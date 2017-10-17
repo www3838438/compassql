@@ -238,6 +238,7 @@ export const SPEC_CONSTRAINTS: SpecConstraintModel[] = [
         case Mark.SQUARE:
         case Mark.TICK:
         case Mark.RULE:
+        case Mark.RECT:
           return specM.channelUsed(Channel.X) || specM.channelUsed(Channel.Y);
         case Mark.POINT:
           // This allows generating a point plot if channel was not a wildcard.
@@ -429,37 +430,64 @@ export const SPEC_CONSTRAINTS: SpecConstraintModel[] = [
   {
     name: 'omitNonPositionalOrFacetOverPositionalChannels',
     description: 'Do not use non-positional channels unless all positional channels are used',
+    properties: [Property.CHANNEL, Property.MARK],
+    allowWildcardForProperties: false,
+    strict: false,
+    satisfy: (specM: SpecQueryModel, _: Schema, opt: QueryConfig) => {
+      const mark = specM.getMark();
+
+      switch(mark) {
+        case Mark.RECT:
+          // RECT is a special exception, as it can be used in a 1xD manner
+          // (e.g., linear heatmap).
+          return true;
+        default:
+          const encodings = specM.specQuery.encodings;
+          let hasNonPositionalChannelOrFacet = false;
+          let hasEnumeratedNonPositionOrFacetChannel = false;
+          let hasX = false, hasY = false;
+          for (let i = 0; i < encodings.length; i++) {
+            const encQ = encodings[i];
+            if (isValueQuery(encQ) || (isDisabledAutoCountQuery(encQ))) {
+              continue; // ignore skipped encoding
+            }
+
+            const channel = encQ.channel;
+            if (channel === Channel.X) {
+              hasX = true;
+            } else if (channel === Channel.Y) {
+              hasY = true;
+            } else if (!isWildcard(channel)) {
+              // All non positional channel / Facet
+              hasNonPositionalChannelOrFacet = true;
+              if (specM.wildcardIndex.hasEncodingProperty(i, Property.CHANNEL)) {
+                hasEnumeratedNonPositionOrFacetChannel = true;
+              }
+            }
+          }
+
+          if ( hasEnumeratedNonPositionOrFacetChannel ||
+              (opt.constraintManuallySpecifiedValue && hasNonPositionalChannelOrFacet)
+            ) {
+            return hasX && hasY;
+          }
+          return true;
+      }
+    }
+  },
+  {
+    name: 'omitFacetOverPositionalChannels',
+    description: 'Do not use facets unless all positional channels have been used',
     properties: [Property.CHANNEL],
     allowWildcardForProperties: false,
     strict: false,
     satisfy: (specM: SpecQueryModel, _: Schema, opt: QueryConfig) => {
-      const encodings = specM.specQuery.encodings;
-      let hasNonPositionalChannelOrFacet = false;
-      let hasEnumeratedNonPositionOrFacetChannel = false;
-      let hasX = false, hasY = false;
-      for (let i = 0; i < encodings.length; i++) {
-        const encQ = encodings[i];
-        if (isValueQuery(encQ) || (isDisabledAutoCountQuery(encQ))) {
-          continue; // ignore skipped encoding
-        }
+      const hasX = specM.channelUsed(Channel.X);
+      const hasY = specM.channelUsed(Channel.Y);
+      const hasRow = specM.channelUsed(Channel.ROW);
+      const hasCol = specM.channelUsed(Channel.COLUMN);
 
-        const channel = encQ.channel;
-        if (channel === Channel.X) {
-          hasX = true;
-        } else if (channel === Channel.Y) {
-          hasY = true;
-        } else if (!isWildcard(channel)) {
-          // All non positional channel / Facet
-          hasNonPositionalChannelOrFacet = true;
-          if (specM.wildcardIndex.hasEncodingProperty(i, Property.CHANNEL)) {
-            hasEnumeratedNonPositionOrFacetChannel = true;
-          }
-        }
-      }
-
-      if ( hasEnumeratedNonPositionOrFacetChannel ||
-          (opt.constraintManuallySpecifiedValue && hasNonPositionalChannelOrFacet)
-        ) {
+      if (hasRow || hasCol) {
         return hasX && hasY;
       }
       return true;
@@ -657,7 +685,29 @@ export const SPEC_CONSTRAINTS: SpecConstraintModel[] = [
             }
             return false;
           }
+        case Mark.RECT:
+          // Until CompassQL supports layering, it only makes sense for
+          // rect to encode DxD or 1xD (otherwise just use bar).
+          // Furthermore, color should only be used in a 'heatmap' fashion
+          // (with a measure field).
+          const xEncQ = specM.getEncodingQueryByChannel(Channel.X);
+          const yEncQ = specM.getEncodingQueryByChannel(Channel.Y);
+          const xIsDimension = isDimension(xEncQ);
+          const yIsDimension = isDimension(yEncQ);
 
+          const colorEncQ = specM.getEncodingQueryByChannel(Channel.COLOR);
+          const colorIsQuantitative = isMeasure(colorEncQ);
+          const colorIsOrdinal = isFieldQuery(colorEncQ) ?
+              colorEncQ.type === Type.ORDINAL : false;
+
+          const correctChannels = (xIsDimension && yIsDimension) ||
+              (xIsDimension && !specM.channelUsed(Channel.Y)) ||
+              (yIsDimension && !specM.channelUsed(Channel.X));
+
+          const correctColor = !colorEncQ ||
+              (colorEncQ && (colorIsQuantitative || colorIsOrdinal));
+
+          return correctChannels && correctColor;
         case Mark.CIRCLE:
         case Mark.POINT:
         case Mark.SQUARE:

@@ -73,6 +73,24 @@
             "channel"
           ],
           "orderGroupBy": "effectiveness"
+        },
+        {
+          "name": "style:autocount()|xy:bin(Miles_per_Gallon)",
+          "path": "/autocount()|bin(Miles_per_Gallon)/style:autocount()|xy:bin(Miles_per_Gallon)",
+          "items": [
+            {
+              "name": "style:autocount()|xy:bin(Miles_per_Gallon)",
+              "path": "/autocount()|bin(Miles_per_Gallon)/style:autocount()|xy:bin(Miles_per_Gallon)/style:autocount()|xy:bin(Miles_per_Gallon)",
+              "items": [
+                "rect|color:count(*,q)|x:bin(Miles_per_Gallon,q)",
+                "rect|color:count(*,q)|y:bin(Miles_per_Gallon,q)"
+              ]
+            }
+          ],
+          "groupBy": [
+            "channel"
+          ],
+          "orderGroupBy": "effectiveness"
         }
       ],
       "groupBy": [

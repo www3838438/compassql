@@ -262,8 +262,8 @@ function init() {
     DISCRETE_OR_NONE.forEach((yType) => {
       // has occlusion
       const ddMark = {
-        point: 0,
         rect: 0,
+        point: -0.0025,
         text: -0.1,
         tick: -1,
         bar: -2,
