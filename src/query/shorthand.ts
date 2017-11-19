@@ -6,7 +6,7 @@ import {isTimeUnit} from 'vega-lite/build/src/timeunit';
 import {Type, getFullName} from 'vega-lite/build/src/type';
 import {isString} from 'datalib/src/util';
 import {EncodingQuery, isFieldQuery, FieldQuery, isValueQuery, isDisabledAutoCountQuery, isEnabledAutoCountQuery, isAutoCountQuery, FieldQueryBase} from './encoding';
-import {SpecQuery, stack, fromSpec} from './spec';
+import {SpecQuery, fromSpec} from './spec';
 import {isWildcard, isShortWildcard, SHORT_WILDCARD} from '../wildcard';
 import {getEncodingNestedProp, Property, isEncodingNestedParent, DEFAULT_PROP_PRECEDENCE, SORT_PROPS, EncodingNestedChildProp} from '../property';
 import {PropIndex} from '../propindex';
@@ -72,7 +72,8 @@ export const PROPERTY_SUPPORTED_CHANNELS = {
   axis: {x: true, y: true, row: true, column: true},
   legend: {color: true, opacity: true, size: true, shape: true},
   scale: {x: true, y: true, color: true, opacity: true, row: true, column: true, size: true, shape: true},
-  sort: {x: true, y: true, path: true, order: true}
+  sort: {x: true, y: true, path: true, order: true},
+  stack: {x: true, y: true},
 };
 
 /**
@@ -95,25 +96,25 @@ export function spec(specQ: SpecQuery,
     parts.push('transform:' + JSON.stringify(specQ.transform));
   }
 
-  // TODO: extract this to its own stack method
-  if (include.get(Property.STACK)) {
-    const _stack = stack(specQ);
-    if (_stack) {
-      // TODO: Refactor this once we have child stack property.
+  // // TODO: extract this to its own stack method
+  // if (include.get(Property.STACK)) {
+  //   const _stack = stack(specQ);
+  //   if (_stack) {
+  //     // TODO: Refactor this once we have child stack property.
 
-      // Exclude type since we don't care about type in stack
-      const includeExceptType = include.duplicate().set('type', false);
+  //     // Exclude type since we don't care about type in stack
+  //     const includeExceptType = include.duplicate().set('type', false);
 
-      const field = fieldDef(_stack.fieldEncQ, includeExceptType, replace);
-      const groupby = _stack.groupByEncQ ? fieldDef(_stack.groupByEncQ, includeExceptType, replace) : undefined;
+  //     const field = fieldDef(_stack.fieldEncQ, includeExceptType, replace);
+  //     const groupby = _stack.groupByEncQ ? fieldDef(_stack.groupByEncQ, includeExceptType, replace) : undefined;
 
-      parts.push(
-        'stack={field:' + field + ',' +
-        (groupby ? 'by:' + groupby + ',' : '') +
-        'offset:' + _stack.offset + '}'
-      );
-    }
-  }
+  //     parts.push(
+  //       'stack={field:' + field + ',' +
+  //       (groupby ? 'by:' + groupby + ',' : '') +
+  //       'offset:' + _stack.offset + '}'
+  //     );
+  //   }
+  // }
 
   if (specQ.encodings) {
     const encodings = specQ.encodings.reduce((encQs, encQ) => {
@@ -155,7 +156,13 @@ export function encoding(encQ: EncodingQuery,
   }
 
   if (isFieldQuery(encQ)) {
+    if (!!encQ.stack) {
+      console.log(encQ);
+    }
     const fieldDefStr = fieldDef(encQ, include, replace);
+    if (!!encQ.stack) {
+      console.log(fieldDefStr);
+    }
     if (fieldDefStr) {
       parts.push(fieldDefStr);
     }
@@ -273,7 +280,7 @@ function fieldDefProps(fieldQ: FieldQuery, include: PropIndex<boolean>, replacer
     props.sort((a, b) => a.key.localeCompare(b.key));
   }
 
-  for (const parent of [Property.SCALE, Property.SORT, Property.AXIS, Property.LEGEND]) {
+  for (const parent of [Property.SCALE, Property.SORT, Property.STACK,Property.AXIS, Property.LEGEND]) {
     if (!isWildcard(fieldQ.channel) && !PROPERTY_SUPPORTED_CHANNELS[parent][fieldQ.channel as Channel]) {
       continue;
     }

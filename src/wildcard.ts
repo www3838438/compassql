@@ -11,6 +11,7 @@ import {Mark} from 'vega-lite/build/src/mark';
 import {Scale, ScaleType, SCALE_PROPERTIES} from 'vega-lite/build/src/scale';
 import {Legend, LEGEND_PROPERTIES} from 'vega-lite/build/src/legend';
 import {SortField, SortOrder} from 'vega-lite/build/src/sort';
+import {StackOffset} from 'vega-lite/build/src/stack';
 import {TimeUnit} from 'vega-lite/build/src/timeunit';
 import {Type} from 'vega-lite/build/src/type';
 
@@ -104,6 +105,7 @@ export const DEFAULT_NAME = {
   hasFn: 'h',
   bin: 'b',
   sort: 'so',
+  stack: 'st',
   scale: 's',
   axis: 'ax',
   legend: 'l',
@@ -161,6 +163,7 @@ export type EnumIndex =
   DefEnumIndex<FieldDef<string>> &
   {
     sort: (SortField | SortOrder)[],
+    stack: StackOffset[],
     scale: boolean[],
     axis: boolean[],
     legend: boolean[],
@@ -271,6 +274,7 @@ export const DEFAULT_ENUM_INDEX: EnumIndex = {
   type: [Type.NOMINAL, Type.ORDINAL, Type.QUANTITATIVE, Type.TEMPORAL],
 
   sort: ['ascending', 'descending'],
+  stack: ['zero', 'center', 'normalize', null],
   value: [undefined],
 
   scale: [true],

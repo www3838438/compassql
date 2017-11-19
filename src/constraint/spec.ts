@@ -16,7 +16,7 @@ import {PropIndex} from '../propindex';
 import {Schema} from '../schema';
 import {contains, every, some} from '../util';
 
-import {scaleType, EncodingQuery, isDimension, isMeasure, ScaleQuery, isFieldQuery, isValueQuery, isAutoCountQuery, isDisabledAutoCountQuery, isEnabledAutoCountQuery} from '../query/encoding';
+import {scaleType, EncodingQuery, isDimension, isMeasure, ScaleQuery, isFieldQuery, FieldQuery, isValueQuery, isAutoCountQuery, isDisabledAutoCountQuery, isEnabledAutoCountQuery} from '../query/encoding';
 
 const NONSPATIAL_CHANNELS_INDEX = NONSPATIAL_CHANNELS.reduce((m, channel) => {
   m[channel] = true;
@@ -669,15 +669,68 @@ export const SPEC_CONSTRAINTS: SpecConstraintModel[] = [
     }
   },
   {
-    name: 'omitNonLinearScaleTypeWithStack',
-    description: 'Stacked plot should only use linear scale',
-    properties: [Property.CHANNEL, Property.MARK, Property.AGGREGATE, Property.AUTOCOUNT, Property.SCALE, getEncodingNestedProp('scale', 'type'), Property.TYPE],
-    // TODO: Property.STACK
+    name: 'omitStackForNonXYChannel',
+    description: 'Stacked charts must be along the X or Y channel',
+    properties: [Property.STACK, Property.CHANNEL],
     allowWildcardForProperties: false,
     strict: true,
     satisfy: (specM: SpecQueryModel, _: Schema, __: QueryConfig) => {
-      const stack = specM.stack();
-      if (stack) {
+      if (specM.isStack()) {
+        for (let encQ of specM.getEncodings()) {
+          if (isFieldQuery(encQ)) {
+            encQ = encQ as FieldQuery;
+            if (!!encQ.stack &&
+                !(encQ.channel === Channel.X || encQ.channel === Channel.Y)) {
+              console.log(encQ);
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    }
+  },
+  {
+    name: 'omitStackWithoutSumAggregateOrMultipleEach',
+    description: 'Stacked charts must be along an sum aggregated field and must have exactly one stack and aggregate',
+    properties: [Property.STACK, Property.AGGREGATE],
+    allowWildcardForProperties: false,
+    strict: true,
+    satisfy: (specM: SpecQueryModel, _: Schema, __: QueryConfig) => {
+      if (specM.isStack()) {
+        let found = false;  // rename
+        for (let encQ of specM.getEncodings()) {
+          if (isFieldQuery(encQ)) {
+            if (!!encQ.stack) {
+              if (!!encQ.aggregate) {
+                if (contains(SUM_OPS, encQ.aggregate)) {
+                  if (!found) {
+                    found = true;
+                  } else {
+                    // Found more than one stacked fields! This is a terrible -- so avoid it.
+                    return false;
+                  }
+                } else {  // TODO(halden): aggregate can be in non field
+                  return false;
+                }
+              }
+              // TODO: what if no aggregate
+            }
+            // No stack, just ignore.
+          }
+        }
+      }
+      return true;
+    }
+  },
+  {
+    name: 'omitNonLinearScaleTypeWithStack',
+    description: 'Stacked plot should only use linear scale',
+    properties: [Property.CHANNEL, Property.MARK, Property.AGGREGATE, Property.AUTOCOUNT, Property.SCALE, getEncodingNestedProp('scale', 'type'), Property.TYPE, Property.STACK],
+    allowWildcardForProperties: false,
+    strict: true,
+    satisfy: (specM: SpecQueryModel, _: Schema, __: QueryConfig) => {
+      if (specM.isStack()) {
         for (let encQ of specM.getEncodings()) {
           if (isValueQuery(encQ)) continue;
           if (((isFieldQuery(encQ) && !!encQ.aggregate) || isEnabledAutoCountQuery(encQ)) &&
@@ -692,21 +745,21 @@ export const SPEC_CONSTRAINTS: SpecConstraintModel[] = [
       return true;
     }
   },
-  {
-    name: 'omitNonSumStack',
-    description: 'Stacked plot should use summative aggregation such as sum, count, or distinct',
-    properties: [Property.CHANNEL, Property.MARK, Property.AGGREGATE, Property.AUTOCOUNT],
-    allowWildcardForProperties: false,
-    strict: false,
-    satisfy: (specM: SpecQueryModel, _: Schema, __: QueryConfig) => {
-      const stack = specM.stack();
-      if (stack) {
-        const measureEncQ = specM.getEncodingQueryByChannel(stack.fieldChannel);
-        return (isFieldQuery(measureEncQ) &&  contains(SUM_OPS, measureEncQ.aggregate)) || (isAutoCountQuery(measureEncQ) && !!measureEncQ.autoCount);
-      }
-      return true;
-    }
-  },
+  // {
+  //   name: 'omitNonSumStack',
+  //   description: 'Stacked plot should use summative aggregation such as sum, count, or distinct',
+  //   properties: [Property.CHANNEL, Property.MARK, Property.AGGREGATE, Property.AUTOCOUNT],
+  //   allowWildcardForProperties: false,
+  //   strict: false,
+  //   satisfy: (specM: SpecQueryModel, _: Schema, __: QueryConfig) => {
+  //     const stack = specM.stack();
+  //     if (stack) {
+  //       const measureEncQ = specM.getEncodingQueryByChannel(stack.fieldChannel);
+  //       return (isFieldQuery(measureEncQ) &&  contains(SUM_OPS, measureEncQ.aggregate)) || (isAutoCountQuery(measureEncQ) && !!measureEncQ.autoCount);
+  //     }
+  //     return true;
+  //   }
+  // },
   {
     name: 'omitTableWithOcclusionIfAutoAddCount',
     description: 'Plots without aggregation or autocount where x and y are both discrete should be omitted if autoAddCount is enabled as they often lead to occlusion',

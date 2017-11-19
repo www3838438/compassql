@@ -46,6 +46,8 @@ export interface QueryConfig {
   omitNonPositionalOrFacetOverPositionalChannels?: boolean;
   omitTableWithOcclusionIfAutoAddCount?: boolean;
   omitVerticalDotPlot?: boolean;
+  omitStackWithoutAggregateOrMultipleEach?: boolean;
+  omitStackForNonXYChannel?: boolean;
 
   preferredBinAxis?: Channel;
   preferredTemporalAxis?: Channel;
