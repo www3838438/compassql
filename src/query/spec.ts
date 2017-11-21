@@ -8,7 +8,7 @@ import {isEncodingTopLevelProperty, Property, toKey, FlatProp, EncodingNestedPro
 import {contains, extend, keys, some} from '../util';
 
 import {TransformQuery} from './transform';
-import {EncodingQuery, isFieldQuery, isEnabledAutoCountQuery} from './encoding';
+import {EncodingQuery, isFieldQuery, isEnabledAutoCountQuery, isAutoCountQuery} from './encoding';
 import {TopLevel, FacetedCompositeUnitSpec} from 'vega-lite/build/src/spec';
 import {toMap} from 'datalib/src/util';
 
@@ -116,7 +116,7 @@ export function isImplicitStack(specQ: SpecQuery) {
   // check for x, y, color used -> stack
   let xUsed = false;
   let yUsed = false;
-  let xOrYAggregate = false;
+  let xOrYAggregateOrAutoCount = false;
   let colorUsed = false;
   for (let encQ of specQ.encodings) {
     if (isFieldQuery(encQ)) {
@@ -124,20 +124,23 @@ export function isImplicitStack(specQ: SpecQuery) {
         case Channel.X:
           xUsed = true;
           if (!!encQ.aggregate) {
-            xOrYAggregate = true;
+            xOrYAggregateOrAutoCount = true;
           }
         case Channel.Y:
           yUsed = true;
           if (!!encQ.aggregate) {
-            xOrYAggregate = true;
+            xOrYAggregateOrAutoCount = true;
           }
         case Channel.COLOR:
           colorUsed = true;
       }
+    } else if (isAutoCountQuery(encQ) &&
+               (encQ.channel === Channel.X || encQ.channel === Channel.Y)) {
+      xOrYAggregateOrAutoCount = true;
     }
   }
 
-  return xUsed && yUsed && xOrYAggregate && colorUsed;
+  return xUsed && yUsed && xOrYAggregateOrAutoCount && colorUsed;
 }
 
 // /**

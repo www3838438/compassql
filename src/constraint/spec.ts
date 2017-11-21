@@ -16,7 +16,7 @@ import {PropIndex} from '../propindex';
 import {Schema} from '../schema';
 import {contains, every, some} from '../util';
 
-import {scaleType, EncodingQuery, isDimension, isMeasure, ScaleQuery, isFieldQuery, FieldQuery, isValueQuery, isAutoCountQuery, isDisabledAutoCountQuery, isEnabledAutoCountQuery} from '../query/encoding';
+import {scaleType, EncodingQuery, isDimension, isMeasure, ScaleQuery, isFieldQuery, isValueQuery, isAutoCountQuery, isDisabledAutoCountQuery, isEnabledAutoCountQuery} from '../query/encoding';
 
 const NONSPATIAL_CHANNELS_INDEX = NONSPATIAL_CHANNELS.reduce((m, channel) => {
   m[channel] = true;
@@ -675,15 +675,11 @@ export const SPEC_CONSTRAINTS: SpecConstraintModel[] = [
     allowWildcardForProperties: false,
     strict: true,
     satisfy: (specM: SpecQueryModel, _: Schema, __: QueryConfig) => {
-      if (specM.isStack()) {
-        for (let encQ of specM.getEncodings()) {
-          if (isFieldQuery(encQ)) {
-            encQ = encQ as FieldQuery;
-            if (!!encQ.stack &&
-                !(encQ.channel === Channel.X || encQ.channel === Channel.Y)) {
-              console.log(encQ);
-              return false;
-            }
+      for (let encQ of specM.getEncodings()) {
+        if (isFieldQuery(encQ)) {
+          if (!!encQ.stack &&
+              !(encQ.channel === Channel.X || encQ.channel === Channel.Y)) {
+            return false;
           }
         }
       }
@@ -692,32 +688,25 @@ export const SPEC_CONSTRAINTS: SpecConstraintModel[] = [
   },
   {
     name: 'omitStackWithoutSumAggregateOrMultipleEach',
-    description: 'Stacked charts must be along an sum aggregated field and must have exactly one stack and aggregate',
+    description: 'Stacked charts must be along an sum aggregated field and must have exactly one stack + aggregate',
     properties: [Property.STACK, Property.AGGREGATE],
     allowWildcardForProperties: false,
     strict: true,
     satisfy: (specM: SpecQueryModel, _: Schema, __: QueryConfig) => {
       if (specM.isStack()) {
-        let found = false;  // rename
-        for (let encQ of specM.getEncodings()) {
-          if (isFieldQuery(encQ)) {
-            if (!!encQ.stack) {
-              if (!!encQ.aggregate) {
-                if (contains(SUM_OPS, encQ.aggregate)) {
-                  if (!found) {
-                    found = true;
-                  } else {
-                    // Found more than one stacked fields! This is a terrible -- so avoid it.
-                    return false;
-                  }
-                } else {  // TODO(halden): aggregate can be in non field
-                  return false;
-                }
-              }
-              // TODO: what if no aggregate
-            }
-            // No stack, just ignore.
-          }
+        // TODO(haldenl): aggregate can be for non field.
+        const xEncQ = specM.getEncodingQueryByChannel(Channel.X);
+        const yEncQ = specM.getEncodingQueryByChannel(Channel.Y);
+
+        if (!!xEncQ && !!yEncQ && isFieldQuery(xEncQ) && isFieldQuery(yEncQ)) {
+          const singleStack = !!xEncQ.stack !== !!yEncQ.stack;
+          const singleAggregate = !!xEncQ.aggregate !== !!yEncQ.aggregate;
+          const correctStackAndAggregate =
+                 (!!xEncQ.stack && contains(SUM_OPS, xEncQ.aggregate)) !==
+                 (!!yEncQ.stack && contains(SUM_OPS, yEncQ.aggregate));
+
+          console.log(`singleStack: ${singleStack} singleAggregate: ${singleAggregate} correct: ${correctStackAndAggregate}`);
+          return singleStack && singleAggregate && correctStackAndAggregate;
         }
       }
       return true;
