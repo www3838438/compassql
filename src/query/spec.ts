@@ -1,4 +1,4 @@
-import {Channel, Y} from 'vega-lite/build/src/channel';
+import {Channel} from 'vega-lite/build/src/channel';
 import {Config} from 'vega-lite/build/src/config';
 import {Data} from 'vega-lite/build/src/data';
 import {Mark} from 'vega-lite/build/src/mark';
@@ -8,7 +8,7 @@ import {isEncodingTopLevelProperty, Property, toKey, FlatProp, EncodingNestedPro
 import {contains, extend, keys, some} from '../util';
 
 import {TransformQuery} from './transform';
-import {EncodingQuery, isFieldQuery, isAutoCountQuery, isEnabledAutoCountQuery} from './encoding';
+import {EncodingQuery, isFieldQuery, isEnabledAutoCountQuery} from './encoding';
 import {TopLevel, FacetedCompositeUnitSpec} from 'vega-lite/build/src/spec';
 import {toMap} from 'datalib/src/util';
 
@@ -84,10 +84,60 @@ export function isAggregate(specQ: SpecQuery) {
   });
 }
 
+/**
+ * Returns true iff the given SpecQuery specifies a stack encoding.
+ * @param specQ The SpecQuery in question.
+ */
 export function isStack(specQ: SpecQuery) {
+  return isExplicitStack(specQ) || isImplicitStack(specQ);
+}
+
+/**
+ * Returns true iff the given SpecQuery specifies a stack encoding explicitly.
+ * @param specQ The SpecQuery in question.
+ */
+export function isExplicitStack(specQ: SpecQuery) {
   return some(specQ.encodings, (encQ: EncodingQuery) => {
     return (isFieldQuery(encQ) && !isWildcard(encQ.stack) && !!encQ.stack);
   });
+}
+
+/**
+ * Returns true iff the given SpecQuery specifies a stack encoding implicitly
+ *     by using x, y (with x or y aggregate), and color channels. Note that
+ *     a query cannot be both an implicit and explicit stack spec.
+ * @param specQ The SpecQuery in question.
+ */
+export function isImplicitStack(specQ: SpecQuery) {
+  if (isExplicitStack(specQ)) {
+    return false;
+  }
+
+  // check for x, y, color used -> stack
+  let xUsed = false;
+  let yUsed = false;
+  let xOrYAggregate = false;
+  let colorUsed = false;
+  for (let encQ of specQ.encodings) {
+    if (isFieldQuery(encQ)) {
+      switch(encQ.channel) {
+        case Channel.X:
+          xUsed = true;
+          if (!!encQ.aggregate) {
+            xOrYAggregate = true;
+          }
+        case Channel.Y:
+          yUsed = true;
+          if (!!encQ.aggregate) {
+            xOrYAggregate = true;
+          }
+        case Channel.COLOR:
+          colorUsed = true;
+      }
+    }
+  }
+
+  return xUsed && yUsed && xOrYAggregate && colorUsed;
 }
 
 // /**

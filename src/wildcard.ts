@@ -274,7 +274,7 @@ export const DEFAULT_ENUM_INDEX: EnumIndex = {
   type: [Type.NOMINAL, Type.ORDINAL, Type.QUANTITATIVE, Type.TEMPORAL],
 
   sort: ['ascending', 'descending'],
-  stack: ['zero', 'center', 'normalize', null],
+  stack: ['zero', 'normalize', 'center'],
   value: [undefined],
 
   scale: [true],

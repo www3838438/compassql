@@ -6,7 +6,7 @@ import {isTimeUnit} from 'vega-lite/build/src/timeunit';
 import {Type, getFullName} from 'vega-lite/build/src/type';
 import {isString} from 'datalib/src/util';
 import {EncodingQuery, isFieldQuery, FieldQuery, isValueQuery, isDisabledAutoCountQuery, isEnabledAutoCountQuery, isAutoCountQuery, FieldQueryBase} from './encoding';
-import {SpecQuery, fromSpec} from './spec';
+import {SpecQuery, fromSpec, isImplicitStack} from './spec';
 import {isWildcard, isShortWildcard, SHORT_WILDCARD} from '../wildcard';
 import {getEncodingNestedProp, Property, isEncodingNestedParent, DEFAULT_PROP_PRECEDENCE, SORT_PROPS, EncodingNestedChildProp} from '../property';
 import {PropIndex} from '../propindex';
@@ -96,6 +96,22 @@ export function spec(specQ: SpecQuery,
     parts.push('transform:' + JSON.stringify(specQ.transform));
   }
 
+  const implicitStack = isImplicitStack(specQ);
+  let stackParentEncQ;
+  if (implicitStack) {
+    // we add the stack property s.t. we can encode the shorthand properly.
+    // First, we search for the aggregate positional
+    // (this is where the stack should occur).
+    for (let encQ of specQ.encodings) {
+      if (isFieldQuery(encQ)) {
+        if (!!encQ.aggregate) {
+          // add the stack spec, defaults to 'zero'.
+          encQ.stack = 'zero';
+          stackParentEncQ = encQ;
+        }
+      }
+    }
+  }
   // // TODO: extract this to its own stack method
   // if (include.get(Property.STACK)) {
   //   const _stack = stack(specQ);
@@ -135,6 +151,11 @@ export function spec(specQ: SpecQuery,
     }
   }
 
+  // clean up the implicit stack specification by removing the encoding
+  if (implicitStack) {
+    delete stackParentEncQ.stack;
+  }
+
   return parts.join('|');
 }
 
@@ -156,13 +177,13 @@ export function encoding(encQ: EncodingQuery,
   }
 
   if (isFieldQuery(encQ)) {
-    if (!!encQ.stack) {
-      console.log(encQ);
-    }
+    // if (!!encQ.stack) {
+    //   console.log(encQ);
+    // }
     const fieldDefStr = fieldDef(encQ, include, replace);
-    if (!!encQ.stack) {
-      console.log(fieldDefStr);
-    }
+    // if (!!encQ.stack) {
+    //   console.log(fieldDefStr);
+    // }
     if (fieldDefStr) {
       parts.push(fieldDefStr);
     }
@@ -280,14 +301,22 @@ function fieldDefProps(fieldQ: FieldQuery, include: PropIndex<boolean>, replacer
     props.sort((a, b) => a.key.localeCompare(b.key));
   }
 
-  for (const parent of [Property.SCALE, Property.SORT, Property.STACK,Property.AXIS, Property.LEGEND]) {
+  for (const parent of [Property.SCALE, Property.SORT, Property.STACK, Property.AXIS, Property.LEGEND]) {
     if (!isWildcard(fieldQ.channel) && !PROPERTY_SUPPORTED_CHANNELS[parent][fieldQ.channel as Channel]) {
       continue;
     }
 
+    // if (!fieldQ[parent] && parent === Property.STACK) {
+    //   // if no stack property is specified, we should explicitly state it as null.
+    //   props.push({key: Property.STACK + '', value: null});
+    //   continue;
+    // }
+
     if (include.get(parent) && fieldQ[parent] !== undefined) {
       const parentValue = fieldQ[parent];
+      console.log(parentValue);
       if (isBoolean(parentValue) || parentValue === null) {
+        console.log('parent: ' + parent + ' parentValue: ' + parentValue);
         // `scale`, `axis`, `legend` can be false/null.
         props.push({
           key: parent + '',
@@ -303,6 +332,7 @@ function fieldDefProps(fieldQ: FieldQuery, include: PropIndex<boolean>, replacer
       } else {
         let nestedPropChildren = [];
         for (const child in parentValue) {
+          console.log(child);
           const nestedProp = getEncodingNestedProp(parent, child as EncodingNestedChildProp);
           if (nestedProp && include.get(nestedProp) && parentValue[child] !== undefined) {
             nestedPropChildren.push({
