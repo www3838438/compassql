@@ -69,24 +69,6 @@
             "channel"
           ],
           "orderGroupBy": "effectiveness"
-        },
-        {
-          "name": "style:mean(Horsepower)|xy:Origin",
-          "path": "/Origin|mean(Horsepower)/style:mean(Horsepower)|xy:Origin",
-          "items": [
-            {
-              "name": "style:mean(Horsepower)|xy:Origin",
-              "path": "/Origin|mean(Horsepower)/style:mean(Horsepower)|xy:Origin/style:mean(Horsepower)|xy:Origin",
-              "items": [
-                "rect|color:mean(Horsepower,q)|y:Origin,n",
-                "rect|color:mean(Horsepower,q)|x:Origin,n"
-              ]
-            }
-          ],
-          "groupBy": [
-            "channel"
-          ],
-          "orderGroupBy": "effectiveness"
         }
       ],
       "groupBy": [
