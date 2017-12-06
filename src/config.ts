@@ -105,7 +105,6 @@ export const DEFAULT_QUERY_CONFIG: QueryConfig = {
   omitRawContinuousFieldForAggregatePlot: true,
   omitRepeatedField: true,
   omitNonPositionalOrFacetOverPositionalChannels: true,
-  omitFacetOverPositionalChannels: true,
   omitTableWithOcclusionIfAutoAddCount: true,
   omitVerticalDotPlot: false,
 
