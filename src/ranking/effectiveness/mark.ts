@@ -261,9 +261,7 @@ function init() {
   DISCRETE_OR_NONE.forEach((xType) => {
     DISCRETE_OR_NONE.forEach((yType) => {
       // has occlusion
-      const ddMark = {
-        rect: 0,
-        point: -0.0025,
+      const ddMarkBase = {
         text: -0.1,
         tick: -1,
         bar: -2,
@@ -271,12 +269,25 @@ function init() {
         area: -2,
         rule: -2.5
       };
-      // No difference between has occlusion and no occlusion
-      forEach(ddMark, (score, mark: Mark) => {
+
+      const ddMarkOcclusion = {
+        point: 0,
+        rect: -0.0025
+      };
+      (<any>Object).assign(ddMarkOcclusion, ddMarkBase);
+
+      const ddMarkNoOcclusion = {
+        rect: 0,
+        point: -0.0025
+      };
+      (<any>Object).assign(ddMarkNoOcclusion, ddMarkBase);
+
+      forEach(ddMarkOcclusion, (score, mark: Mark) => {
         const feature = featurize(xType, yType, true, mark);
         SCORE[feature] = score;
       });
-      forEach(ddMark, (score, mark: Mark) => {
+
+      forEach(ddMarkNoOcclusion, (score, mark: Mark) => {
         const feature = featurize(xType, yType, false, mark);
         SCORE[feature] = score;
       });

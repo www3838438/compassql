@@ -217,18 +217,19 @@ export const DD_RULESET = {
     const _rules: Rule[] = [];
     [TIMEUNIT_O, O, BIN_Q, N].forEach((xType) => {
       [TIMEUNIT_O, O, BIN_Q, N].forEach((yType) => {
-        const ddRank = [RECT, POINT, TEXTMARK, TICK, [BAR, LINE, AREA], RULE];
-
+        const base = [TEXTMARK, TICK, [BAR, LINE, AREA], RULE];
+        const ddRankOcclusion = [POINT, RECT].concat(<any>base);
         _rules.push({
           name: xType + ' x ' + yType + ' (with occlusion)',
-          items: nestedMap(ddRank, (mark: Mark) => {
+          items: nestedMap(ddRankOcclusion, (mark: Mark) => {
             return featurize(xType, yType, true, mark);
           })
         });
 
+        const ddRankNoOcclusion = [RECT, POINT].concat(<any>base);
         _rules.push({
           name: xType + ' x ' + yType + ' (without occlusion)',
-          items: nestedMap(ddRank, (mark: Mark) => {
+          items: nestedMap(ddRankNoOcclusion, (mark: Mark) => {
             return featurize(xType, yType, false, mark);
           })
         });
